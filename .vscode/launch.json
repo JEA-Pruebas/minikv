@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug set nombre joaquin",
+      "cargo": {
+        "args": ["build", "--bin=minikv"],
+        "filter": {
+          "name": "minikv",
+          "kind": "bin"
+        }
+      },
+      "args": ["set", "nombre", "joaquin"],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
