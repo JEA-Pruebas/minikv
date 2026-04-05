@@ -3,7 +3,7 @@ use crate::persistence::cargar_store;
 use crate::protocolo::{parsear_linea_comando, respuesta_error};
 use crate::servicio::ejecutar_comando_en_store;
 use crate::store::Store;
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader, ErrorKind, Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -71,13 +71,10 @@ fn manejar_cliente(mut stream: TcpStream, estado: Arc<Mutex<Store>>) {
 }
 
 fn configurar_timeout(stream: &TcpStream) -> Result<(), ErrorTipo> {
-    let timeout = Some(Duration::from_millis(TIMEOUT_MS));
+    let timeout_escritura = Some(Duration::from_millis(TIMEOUT_MS));
 
     stream
-        .set_read_timeout(timeout)
-        .map_err(|_| ErrorTipo::Timeout)?;
-    stream
-        .set_write_timeout(timeout)
+        .set_write_timeout(timeout_escritura)
         .map_err(|_| ErrorTipo::Timeout)?;
 
     Ok(())
@@ -101,5 +98,12 @@ fn procesar_linea_recibida(linea: &str, estado: &Arc<Mutex<Store>>) -> String {
 }
 
 fn enviar_respuesta(stream: &mut TcpStream, respuesta: &str) -> Result<(), ErrorTipo> {
-    writeln!(stream, "{}", respuesta).map_err(|_| ErrorTipo::ConnectionClosed)
+    writeln!(stream, "{}", respuesta).map_err(mapear_error_io)
+}
+
+fn mapear_error_io(error: std::io::Error) -> ErrorTipo {
+    match error.kind() {
+        ErrorKind::WouldBlock | ErrorKind::TimedOut => ErrorTipo::Timeout,
+        _ => ErrorTipo::ConnectionClosed,
+    }
 }

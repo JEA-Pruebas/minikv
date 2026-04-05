@@ -1,6 +1,6 @@
 use crate::errores::ErrorTipo;
 use crate::protocolo::respuesta_error;
-use std::io::{self, BufRead, BufReader, Write};
+use std::io::{self, BufRead, BufReader, ErrorKind, Write};
 use std::net::TcpStream;
 use std::time::Duration;
 
@@ -48,7 +48,7 @@ fn configurar_timeout(stream: &TcpStream) -> Result<(), ErrorTipo> {
 }
 
 fn enviar_operacion(stream: &mut TcpStream, operacion: &str) -> Result<(), ErrorTipo> {
-    writeln!(stream, "{}", operacion).map_err(|_| ErrorTipo::ConnectionClosed)
+    writeln!(stream, "{}", operacion).map_err(mapear_error_io)
 }
 
 fn recibir_respuesta(lector_red: &mut BufReader<TcpStream>) -> Result<String, ErrorTipo> {
@@ -56,7 +56,7 @@ fn recibir_respuesta(lector_red: &mut BufReader<TcpStream>) -> Result<String, Er
 
     let leidos = lector_red
         .read_line(&mut respuesta)
-        .map_err(|_| ErrorTipo::ConnectionClosed)?;
+        .map_err(mapear_error_io)?;
 
     if leidos == 0 {
         return Err(ErrorTipo::ConnectionClosed);
@@ -67,4 +67,11 @@ fn recibir_respuesta(lector_red: &mut BufReader<TcpStream>) -> Result<String, Er
 
 pub fn imprimir_error_cliente(error: &ErrorTipo) {
     println!("{}", respuesta_error(error));
+}
+
+fn mapear_error_io(error: std::io::Error) -> ErrorTipo {
+    match error.kind() {
+        ErrorKind::WouldBlock | ErrorKind::TimedOut => ErrorTipo::Timeout,
+        _ => ErrorTipo::ConnectionClosed,
+    }
 }
