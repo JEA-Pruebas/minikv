@@ -18,6 +18,16 @@ pub enum ErrorTipo {
     MissingArgument,
     /// Comando desconocido.
     UnknownCommand,
+    /// Argumentos inválidos en binarios de cliente/servidor.
+    InvalidArgs,
+    /// El servidor no puede bindear un socket en la dirección indicada.
+    ServerSocketBinding,
+    /// El cliente no puede abrir un socket hacia el servidor.
+    ClientSocketBinding,
+    /// Se excedió el tiempo de espera de una operación de red.
+    Timeout,
+    /// La conexión de red se cerró inesperadamente.
+    ConnectionClosed,
 }
 
 impl ErrorTipo {
@@ -32,6 +42,11 @@ impl ErrorTipo {
             ErrorTipo::InvalidLogFile => "ERROR: INVALID LOG FILE",
             ErrorTipo::MissingArgument => "ERROR: MISSING ARGUMENT",
             ErrorTipo::UnknownCommand => "ERROR: UNKNOWN COMMAND",
+            ErrorTipo::InvalidArgs => "ERROR: INVALID ARGS",
+            ErrorTipo::ServerSocketBinding => "ERROR: SERVER SOCKET BINDING",
+            ErrorTipo::ClientSocketBinding => "ERROR: CLIENT SOCKET BINDING",
+            ErrorTipo::Timeout => "ERROR: TIMEOUT",
+            ErrorTipo::ConnectionClosed => "ERROR: CONNECTION CLOSED",
         }
     }
 }

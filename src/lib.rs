@@ -1,5 +1,9 @@
+pub mod cliente;
 pub mod command;
 pub mod errores;
 pub mod operation;
 pub mod persistence;
+pub mod protocolo;
+pub mod servicio;
+pub mod servidor;
 pub mod store;
