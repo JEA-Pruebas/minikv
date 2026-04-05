@@ -42,13 +42,38 @@ impl Command {
             return Err(ErrorTipo::MissingArgument);
         };
 
-        match nombre.as_str() {
-            "set" => parsear_set(iter),
-            "get" => parsear_get(iter),
-            "length" => parsear_sin_args(iter, Command::Length),
-            "snapshot" => parsear_sin_args(iter, Command::Snapshot),
-            _ => Err(ErrorTipo::UnknownCommand),
-        }
+        parsear_nombre_comando(nombre, iter)
+    }
+
+    /// Parsea un comando textual recibido por red.
+    ///
+    /// Admite comandos separados por espacios en una sola línea, por ejemplo:
+    /// - `set clave valor`
+    /// - `get clave`
+    /// - `length`
+    /// - `snapshot`
+    pub fn parsear_linea(linea: &str) -> Result<Self, ErrorTipo> {
+        let mut partes = linea.split_whitespace();
+
+        let Some(nombre) = partes.next() else {
+            return Err(ErrorTipo::MissingArgument);
+        };
+
+        let argumentos = partes.map(|parte| parte.to_string());
+        parsear_nombre_comando(nombre.to_string(), argumentos)
+    }
+}
+
+fn parsear_nombre_comando<I>(nombre: String, iter: I) -> Result<Command, ErrorTipo>
+where
+    I: Iterator<Item = String>,
+{
+    match nombre.as_str() {
+        "set" => parsear_set(iter),
+        "get" => parsear_get(iter),
+        "length" => parsear_sin_args(iter, Command::Length),
+        "snapshot" => parsear_sin_args(iter, Command::Snapshot),
+        _ => Err(ErrorTipo::UnknownCommand),
     }
 }
 
@@ -170,5 +195,15 @@ mod tests {
         let comando = Command::parsear(args);
 
         assert!(matches!(comando, Ok(Command::Snapshot)));
+    }
+
+    #[test]
+    fn parsea_linea_get() {
+        let comando = Command::parsear_linea("get edad");
+
+        match comando {
+            Ok(Command::Get { clave }) => assert_eq!(clave, "edad"),
+            _ => panic!("Se esperaba Command::Get"),
+        }
     }
 }
